@@ -2520,7 +2520,7 @@ void thread_up(void) {
             ++buff_index;		
             buff_up[buff_index] = 0; /* add string terminator, for safety */		
             /* send stat to server url*/
-	    printf("\nJSON up: %s\n", (char *)(buff_up + 12)); /* DEBUG: display JSON payload */ 	
+	    /*printf("\nJSON up: %s\n", (char *)(buff_up + 12)); /* DEBUG: display JSON payload */ 	
 	    webhook(serv_url,(char *)(buff_up + 12)); 	
 	} else {
             /* send datagram to server url*/
