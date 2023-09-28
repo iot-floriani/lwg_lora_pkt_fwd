@@ -2514,10 +2514,10 @@ void thread_up(void) {
                 exit(EXIT_FAILURE);
             }
             /* send stat to server url*/
-	    webhook(serv_url,(char *)(buff_up + 12));	
+	    /*webhook(serv_url,(char *)(buff_up + 12)); */	
 	} else {
             /* send datagram to server url*/
-            printf("\nJSON webhook: %s\n", (char *)(buff_wh + buff_index + 2)); /* DEBUG: display JSON payload */ 
+            printf("\nJSON webhook: %s\n", (char *)(buff_wh + buff_index)); /* DEBUG: display JSON payload */ 
             webhook(serv_url,(char *)(buff_wh + 12));
         }
 
