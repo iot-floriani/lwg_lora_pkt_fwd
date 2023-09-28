@@ -1983,7 +1983,7 @@ int main(int argc, char ** argv)
 /* --- THREAD 1: RECEIVING PACKETS AND FORWARDING THEM ---------------------- */
 
 void thread_up(void) {
-    int i, j, k, w; /* loop variables */
+    int i, j, k, w, l; /* loop variables */
     unsigned pkt_in_dgram; /* nb on Lora packet in the current datagram */
     char stat_timestamp[24];
     time_t t;
@@ -2006,6 +2006,10 @@ void thread_up(void) {
     uint8_t buff_wh[TX_BUFF_SIZE]; /* buffer webhook to compose the upstream packet */
     int buff_wh_index;
     
+    /* live data buffers */
+    uint8_t buff_ld[TX_BUFF_SIZE]; /* buffer live data to compose the upstream packet */
+    int buff_ld_index;
+	
     /* protocol variables */
     uint8_t token_h; /* random token for acknowledgement matching */
     uint8_t token_l; /* random token for acknowledgement matching */
@@ -2083,6 +2087,7 @@ void thread_up(void) {
         buff_up[2] = token_l;
         buff_index = 12; /* 12-byte header */
         buff_wh_index = 12; /* 12-byte header */
+	buff_ld_index = 12; /* 12-byte header */    
 
         /* start of JSON structure */
         memcpy((void *)(buff_up + buff_index), (void *)"{\"rxpk\":[", 9);
@@ -2513,15 +2518,16 @@ void thread_up(void) {
                 MSG("ERROR: [up] snprintf failed line %u\n", (__LINE__ - 5));
                 exit(EXIT_FAILURE);
             }
-            /* end of JSON datagram payload */
-            buff_up[buff_index] = '}';
-            ++buff_index;
-            buff_up[buff_index] = '}';
-            ++buff_index;		
-            buff_up[buff_index] = 0; /* add string terminator, for safety */		
-            /* send stat to server url*/
-	    /*printf("\nJSON up: %s\n", (char *)(buff_up + 12)); /* DEBUG: display JSON payload */ 	
-	    webhook(serv_url,(char *)(buff_up + 12)); 	
+            /* send stat to server url*/ 		
+            l = snprintf((char *)(buff_ld + buff_ld_index), TX_BUFF_SIZE-buff_ld_index, "{\"stat\":{\"time\":\"%04i-%02i-%02iT%02i:%02i:%02i.%06liZ\"", (x->tm_year)+1900, (x->tm_mon)+1, x->tm_mday, x->tm_hour, x->tm_min, x->tm_sec, (pkt_utc_time.tv_nsec)/1000);  
+            if (l > 0) {
+                buff_ld_index += l;
+            } else {
+                MSG("ERROR: [up] snprintf failed line %u\n", (__LINE__ - 4));
+                exit(EXIT_FAILURE);
+            }
+	    printf("\nJSON up: %s\n", (char *)(buff_ld + 12)); /* DEBUG: display JSON payload */ 	
+	    /*webhook(serv_url,(char *)(buff_ld + 12)); */	
 	} else {
             /* send datagram to server url*/
             printf("\nJSON webhook: %s\n", (char *)(buff_wh + 12)); /* DEBUG: display JSON payload */ 
