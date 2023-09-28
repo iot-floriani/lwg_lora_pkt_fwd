@@ -2517,7 +2517,7 @@ void thread_up(void) {
 	    webhook(serv_url,(char *)(buff_up + 12));	
 	} else {
             /* send datagram to server url*/
-            printf("\nJSON webhook: %s\n", (char *)(buff_wh + 12)); /* DEBUG: display JSON payload */ 
+            printf("\nJSON webhook: %s\n", (char *)(buff_wh + buff_index + 2)); /* DEBUG: display JSON payload */ 
             webhook(serv_url,(char *)(buff_wh + 12));
         }
 
