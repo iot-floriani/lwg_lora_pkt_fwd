@@ -2518,19 +2518,21 @@ void thread_up(void) {
                 MSG("ERROR: [up] snprintf failed line %u\n", (__LINE__ - 5));
                 exit(EXIT_FAILURE);
             }
-            /* send stat to server url*/
-            l = snprintf((char *)(buff_ld + buff_ld_index), TX_BUFF_SIZE-buff_ld_index, "{\"stat\":{\"livedata\":\"%s\"}}", stat_timestamp);
+            
+	    /*create datagramm status*/
+            l = snprintf((char *)(buff_ld + buff_ld_index), TX_BUFF_SIZE-buff_ld_index, "{\"stat\":{\"time\":\"%s\",\"coordinates\":{\"latitude\":\"%.5f,\"longitude\":%.5f}}}", stat_timestamp,cp_gps_coord.lat, cp_gps_coord.lon);
             if (l > 0) {
                 buff_ld_index += l;
             } else {
                 MSG("ERROR: [up] snprintf failed line %u\n", (__LINE__ - 4));
                 exit(EXIT_FAILURE);
             }
-	        printf("\nJSON up: %s\n", (char *)(buff_ld + 12)); /* DEBUG: display JSON payload */ 	
+	        /* printf("\nJSON up: %s\n", (char *)(buff_ld + 12)); /* DEBUG: display JSON payload */ 
+		/* send stat to server url*/
 	        webhook(serv_url,(char *)(buff_ld + 12));
 	} else {
             /* send datagram to server url*/
-            printf("\nJSON webhook: %s\n", (char *)(buff_wh + 12)); /* DEBUG: display JSON payload */ 
+            /* printf("\nJSON webhook: %s\n", (char *)(buff_wh + 12)); /* DEBUG: display JSON payload */ 
             webhook(serv_url,(char *)(buff_wh + 12));
         }
 
