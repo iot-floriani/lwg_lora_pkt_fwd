@@ -176,7 +176,8 @@ static double xtal_correct = 1.0;
 static char gps_tty_path[64] = "\0"; /* path of the TTY port GPS is connected on */
 static int gps_tty_fd = -1; /* file descriptor of the GPS TTY port */
 static bool gps_enabled = false; /* is GPS enabled on that gateway ? */
-
+static float stat_latitude = 0.0;
+static float stat_longitude = 0.0;
 /* GPS time reference */
 static pthread_mutex_t mx_timeref = PTHREAD_MUTEX_INITIALIZER; /* control access to GPS time reference */
 static bool gps_ref_valid; /* is GPS reference acceptable (ie. not too old) */
@@ -1914,9 +1915,14 @@ int main(int argc, char ** argv)
         pthread_mutex_lock(&mx_stat_rep);
         if (((gps_enabled == true) && (coord_ok == true)) || (gps_fake_enable == true)) {
             snprintf(status_report, STATUS_SIZE, "\"stat\":{\"time\":\"%s\",\"lati\":%.5f,\"long\":%.5f,\"alti\":%i,\"rxnb\":%u,\"rxok\":%u,\"rxfw\":%u,\"ackr\":%.1f,\"dwnb\":%u,\"txnb\":%u,\"temp\":%.1f}", stat_timestamp, cp_gps_coord.lat, cp_gps_coord.lon, cp_gps_coord.alt, cp_nb_rx_rcv, cp_nb_rx_ok, cp_up_pkt_fwd, 100.0 * up_ack_ratio, cp_dw_dgram_rcv, cp_nb_tx_ok, temperature);
-        } else {
+			stat_latitude = cp_gps_coord.lat; 
+			stat_longitude = cp_gps_coord.lon; 
+			/*cp_gps_coord.alt;*/
+		} else {
             snprintf(status_report, STATUS_SIZE, "\"stat\":{\"time\":\"%s\",\"rxnb\":%u,\"rxok\":%u,\"rxfw\":%u,\"ackr\":%.1f,\"dwnb\":%u,\"txnb\":%u,\"temp\":%.1f}", stat_timestamp, cp_nb_rx_rcv, cp_nb_rx_ok, cp_up_pkt_fwd, 100.0 * up_ack_ratio, cp_dw_dgram_rcv, cp_nb_tx_ok, temperature);
-        }
+            stat_latitude  = reference_coord.lat; 
+			stat_longitude = reference_coord.lon; 
+		}
         
         report_ready = true;
         pthread_mutex_unlock(&mx_stat_rep);
@@ -2520,14 +2526,14 @@ void thread_up(void) {
             }
             
 	    /*create datagramm status*/
-            l = snprintf((char *)(buff_ld + buff_ld_index), TX_BUFF_SIZE-buff_ld_index, "{\"stat\":{\"time\":\"%s\",\"coordinates\":{\"latitude\":\"%.5f,\"longitude\":%.5f}}}", stat_timestamp,cp_gps_coord.lat, cp_gps_coord.lon);
+            l = snprintf((char *)(buff_ld + buff_ld_index), TX_BUFF_SIZE-buff_ld_index, "{\"stat\":{\"time\":\"%s\",\"coordinates\":{\"latitude\":%.5f,\"longitude\":%.5f}}}", stat_timestamp,stat_latitude,stat_longitude);
             if (l > 0) {
                 buff_ld_index += l;
             } else {
                 MSG("ERROR: [up] snprintf failed line %u\n", (__LINE__ - 4));
                 exit(EXIT_FAILURE);
             }
-	        /* printf("\nJSON up: %s\n", (char *)(buff_ld + 12)); /* DEBUG: display JSON payload */ 
+	        printf("\nJSON up: %s\n", (char *)(buff_ld + 12)); /* DEBUG: display JSON payload */ 
 		/* send stat to server url*/
 	        webhook(serv_url,(char *)(buff_ld + 12));
 	} else {
