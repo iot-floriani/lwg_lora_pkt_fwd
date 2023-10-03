@@ -178,6 +178,7 @@ static int gps_tty_fd = -1; /* file descriptor of the GPS TTY port */
 static bool gps_enabled = false; /* is GPS enabled on that gateway ? */
 static float stat_latitude = 0.0;
 static float stat_longitude = 0.0;
+static float stat_temperature = 0.0;
 /* GPS time reference */
 static pthread_mutex_t mx_timeref = PTHREAD_MUTEX_INITIALIZER; /* control access to GPS time reference */
 static bool gps_ref_valid; /* is GPS reference acceptable (ie. not too old) */
@@ -1917,11 +1918,13 @@ int main(int argc, char ** argv)
             snprintf(status_report, STATUS_SIZE, "\"stat\":{\"time\":\"%s\",\"lati\":%.5f,\"long\":%.5f,\"alti\":%i,\"rxnb\":%u,\"rxok\":%u,\"rxfw\":%u,\"ackr\":%.1f,\"dwnb\":%u,\"txnb\":%u,\"temp\":%.1f}", stat_timestamp, cp_gps_coord.lat, cp_gps_coord.lon, cp_gps_coord.alt, cp_nb_rx_rcv, cp_nb_rx_ok, cp_up_pkt_fwd, 100.0 * up_ack_ratio, cp_dw_dgram_rcv, cp_nb_tx_ok, temperature);
 			stat_latitude = cp_gps_coord.lat; 
 			stat_longitude = cp_gps_coord.lon; 
+			stat_temperature = temperature;
 			/*cp_gps_coord.alt;*/
 		} else {
             snprintf(status_report, STATUS_SIZE, "\"stat\":{\"time\":\"%s\",\"rxnb\":%u,\"rxok\":%u,\"rxfw\":%u,\"ackr\":%.1f,\"dwnb\":%u,\"txnb\":%u,\"temp\":%.1f}", stat_timestamp, cp_nb_rx_rcv, cp_nb_rx_ok, cp_up_pkt_fwd, 100.0 * up_ack_ratio, cp_dw_dgram_rcv, cp_nb_tx_ok, temperature);
-            stat_latitude  = reference_coord.lat; 
+            stat_latitude = reference_coord.lat; 
 			stat_longitude = reference_coord.lon; 
+			stat_temperature = temperature;
 		}
         
         report_ready = true;
@@ -2433,7 +2436,7 @@ void thread_up(void) {
                 exit(EXIT_FAILURE);
             }
 
-            w = snprintf((char *)(buff_wh + buff_wh_index), TX_BUFF_SIZE-buff_wh_index, "\",\"size\":%u},\"gateway_ids\":{\"eui\":\"%016llX\"}",p->size,lgwm);
+            w = snprintf((char *)(buff_wh + buff_wh_index), TX_BUFF_SIZE-buff_wh_index, "\",\"size\":%u},\"gateway_ids\":{\"eui\":\"%016llX\",\"temp\":%.1f}",p->size,lgwm,stat_temperature);
             if (w > 0) {
                 buff_wh_index += w;
             } else {
@@ -2526,7 +2529,7 @@ void thread_up(void) {
             }
             
 	    /*create datagramm status*/
-            l = snprintf((char *)(buff_ld + buff_ld_index), TX_BUFF_SIZE-buff_ld_index, "{\"stat\":{\"time\":\"%s\",\"coordinates\":{\"latitude\":%.5f,\"longitude\":%.5f}}}", stat_timestamp,stat_latitude,stat_longitude);
+            l = snprintf((char *)(buff_ld + buff_ld_index), TX_BUFF_SIZE-buff_ld_index, "{\"stat\":{\"time\":\"%s\",\"coordinates\":{\"latitude\":%.5f,\"longitude\":%.5f},\"gateway\":{\"temperature\":%.1f}}}", stat_timestamp,stat_latitude,stat_longitude,stat_temperature);
             if (l > 0) {
                 buff_ld_index += l;
             } else {
