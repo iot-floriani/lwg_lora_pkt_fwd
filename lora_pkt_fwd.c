@@ -2436,7 +2436,7 @@ void thread_up(void) {
                 exit(EXIT_FAILURE);
             }
 
-            w = snprintf((char *)(buff_wh + buff_wh_index), TX_BUFF_SIZE-buff_wh_index, "\",\"size\":%u},\"gateway_ids\":{\"eui\":\"%016llX\",\"rssi\":%.0f,\"snr\":%.1f,\"datarate\":\"SF%u\"}",p->size,lgwm,roundf(p->rssic),p->snr,p->datarate);
+            w = snprintf((char *)(buff_wh + buff_wh_index), TX_BUFF_SIZE-buff_wh_index, "\",\"size\":%u,\"rssi\":%.0f,\"snr\":%.1f,\"spreading_factor\":%u},\"gateway_ids\":{\"eui\":\"%016llX\"}",p->size,roundf(p->rssic),p->snr,p->datarate,lgwm);
             if (w > 0) {
                 buff_wh_index += w;
             } else {
